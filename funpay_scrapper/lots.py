@@ -72,7 +72,7 @@ class Lots:
         """
         soup = BeautifulSoup(self.data, "html.parser")
         lots = soup.find("div", class_="tc table-hover table-clickable tc-short showcase-table tc-lazyload tc-sortable showcase-has-promo") or soup.find("div", class_="tc table-hover table-clickable tc-short showcase-table tc-lazyload tc-sortable") or soup.find("div", class_="tc table-hover table-clickable showcase-table tc-sortable tc-lazyload showcase-has-promo")
-        lots_links = {}
+        lots_links = []
         if lots:
             lots = lots.find_all("a", class_="tc-item")[:max_limit]
             for i, lot in enumerate(lots):
@@ -87,13 +87,14 @@ class Lots:
                 info = self.clean_text(info_element.text) if info_element else 'Unknown'
                 cost = self.clean_text(cost_element.text) if cost_element else 'Unknown'
                 seller = self.clean_text(seller_element.text) if seller_element else 'Unknown'
-                item_name = str(i+1)
 
-                lots_links[item_name] = {
+
+                lots_links.append({
                     "href": href,
-                    "cost": cost,
-                    "info": info
-                }
+                    "info": info,
+                    "cost": cost
+                    
+                })
         return lots_links
     
     def sort_lots(self, sort_by="lowest"):
