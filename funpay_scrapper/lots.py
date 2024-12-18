@@ -77,11 +77,14 @@ class Lots:
             lots = lots.find_all("a", class_="tc-item")[:max_limit]
             for i, lot in enumerate(lots):
                 href = lot.get("href")
+                info_element = lot.find("div", class_="tc-desc")
+                info_element = info_element.find("div",class_="tc-desc-text")
                 cost_element = lot.find("div", class_="tc-price")
                 seller_element = lot.find("div", class_="tc-user")
                 seller_element = seller_element.find("div", class_="media-body")
                 seller_element = seller_element.find("div", class_="media-user-name")
-
+                
+                info = self.clean_text(info_element.text) if info_element else 'Unknown'
                 cost = self.clean_text(cost_element.text) if cost_element else 'Unknown'
                 seller = self.clean_text(seller_element.text) if seller_element else 'Unknown'
                 item_name = str(i+1)
@@ -89,7 +92,7 @@ class Lots:
                 lots_links[item_name] = {
                     "href": href,
                     "cost": cost,
-                    "seller": seller
+                    "info": info
                 }
         return lots_links
     
