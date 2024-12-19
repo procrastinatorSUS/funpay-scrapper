@@ -25,7 +25,7 @@ class Lots:
             ID (int): The ID of the lots.
         """
         self.id = str(ID)
-        self.url = f"https://funpay.com/lots/{self.id}/" or f"https://funpay.com/chips/{self.id}/"
+        self.url = f"https://funpay.com/en/lots/{self.id}/" or f"https://funpay.com/chips/{self.id}/"
         self.data = None
 
         self.__get_data__()
@@ -74,12 +74,14 @@ class Lots:
         lots = soup.find("div", class_="tc table-hover table-clickable tc-short showcase-table tc-lazyload tc-sortable showcase-has-promo") or soup.find("div", class_="tc table-hover table-clickable tc-short showcase-table tc-lazyload tc-sortable") or soup.find("div", class_="tc table-hover table-clickable showcase-table tc-sortable tc-lazyload showcase-has-promo")
         lots_links = []
         if lots:
+            lots_rotten = lots.find_all("a", class_="tc-item offer-promo offer-promoted")[:max_limit]
             lots = lots.find_all("a", class_="tc-item")[:max_limit]
             for i, lot in enumerate(lots):
                 href = lot.get("href")
                 info_element = lot.find("div", class_="tc-desc")
                 info_element = info_element.find("div",class_="tc-desc-text")
                 cost_element = lot.find("div", class_="tc-price")
+                check_for_pin_ellement = lot.find("div", class_="sc-offer-icons")
                 seller_element = lot.find("div", class_="tc-user")
                 seller_element = seller_element.find("div", class_="media-body")
                 seller_element = seller_element.find("div", class_="media-user-name")
@@ -88,13 +90,13 @@ class Lots:
                 cost = self.clean_text(cost_element.text) if cost_element else 'Unknown'
                 seller = self.clean_text(seller_element.text) if seller_element else 'Unknown'
 
-
-                lots_links.append({
-                    "href": href,
-                    "info": info,
-                    "cost": cost
-                    
-                })
+                if not check_for_pin_ellement:
+                    lots_links.append({
+                        "href": href,
+                        "info": info,
+                        "cost": cost
+                        
+                    })
         return lots_links
     
     def sort_lots(self, sort_by="lowest"):
