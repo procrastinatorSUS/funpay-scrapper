@@ -60,45 +60,46 @@ class Lots:
         """
         return re.sub(r'\s+', ' ', text).strip()
 
-    def lots_links(self, max_limit=10):
+    def lots_links(self, max_limit=20):
         """
-        Returns a dictionary of lots links.
+        Возвращает список ссылок на лоты, исключая лоты с сервером (RU) и закрепленные предложения.
 
         Args:
-            max_limit (int, optional): The maximum number of lots links to return. Defaults to 10.
+            max_limit (int): Максимальное количество лотов для обработки.
 
         Returns:
-            dict: A dictionary of lots links.
+            list: Список словарей с информацией о лотах.
         """
-        soup = BeautifulSoup(self.data, "html.parser")
-        lots = soup.find("div", class_="tc table-hover table-clickable tc-short showcase-table tc-lazyload tc-sortable showcase-has-promo") or soup.find("div", class_="tc table-hover table-clickable tc-short showcase-table tc-lazyload tc-sortable") or soup.find("div", class_="tc table-hover table-clickable showcase-table tc-sortable tc-lazyload showcase-has-promo")
-        lots_links = []
-        if lots:
-            lots_rotten = lots.find_all("a", class_="tc-item offer-promo offer-promoted")[:max_limit]
-            lots = lots.find_all("a", class_="tc-item")[:max_limit]
-            for i, lot in enumerate(lots):
-                href = lot.get("href")
-                info_element = lot.find("div", class_="tc-desc")
-                info_element = info_element.find("div",class_="tc-desc-text")
-                cost_element = lot.find("div", class_="tc-price")
-                check_for_pin_ellement = lot.find("div", class_="sc-offer-icons")
-                seller_element = lot.find("div", class_="tc-user")
-                seller_element = seller_element.find("div", class_="media-body")
-                seller_element = seller_element.find("div", class_="media-user-name")
-                
-                info = self.clean_text(info_element.text) if info_element else 'Unknown'
-                cost = self.clean_text(cost_element.text) if cost_element else 'Unknown'
-                seller = self.clean_text(seller_element.text) if seller_element else 'Unknown'
+        try:
+            soup = BeautifulSoup(self.data, "html.parser")
+            lots = soup.find("div", class_="showcase-table")
+            lots_links = []
 
-                if not check_for_pin_ellement:
-                    lots_links.append({
-                        "href": href,
-                        "info": info,
-                        "cost": cost
-                        
-                    })
-        return lots_links
-    
+            if lots:
+                lots = lots.find_all("a", class_="tc-item")[:max_limit]
+                for lot in lots:
+                    
+                    href = lot.get("href", "Unknown")
+                    info = self.clean_text(lot.find("div", class_="tc-desc-text").text) if lot.find("div", class_="tc-desc-text") else 'Unknown'
+                    cost = self.clean_text(lot.find("div", class_="tc-price").text) if lot.find("div", class_="tc-price") else 'Unknown'
+                    server_element = lot.find("div", class_="tc-server hidden-xs")
+                    server = self.clean_text(server_element.text) if server_element else 'Unknown'
+                    check_for_pin_element = lot.find("div", class_="sc-offer-icons")
+
+                    #без RU и закрепов
+                    if "(RU)" not in server and not check_for_pin_element:
+                        lots_links.append({
+                            "href": href,
+                            "info": info,
+                            "cost": cost,
+                            "server": server
+                        })
+            return lots_links
+        except Exception as e:
+            print(f"Error parsing lots: {e}")
+            return []
+
+
     def sort_lots(self, sort_by="lowest"):
         """
         Sorts the lots links by cost.
